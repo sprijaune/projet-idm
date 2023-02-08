@@ -1,0 +1,4 @@
+import 'PetriNet.ecore'
+
+context Place
+inv : self.name <> null

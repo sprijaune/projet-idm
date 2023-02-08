@@ -1,0 +1,14 @@
+import 'PetriNet.ecore'
+
+package petrinet
+
+context Place
+	inv NonNull_name('The \'name\' property of "' + self.toString() + '" is null') : name <> null
+	
+context Arc
+	inv correctArc : self.predecesseur.oclIsKindOf(Place) xor self.successeur.oclIsKindOf(Place)
+	
+context ReadArc
+	inv placeToTrans : self.predecesseur.oclIsKindOf(Place) and self.successeur.oclIsKindOf(Transition)
+
+endpackage
