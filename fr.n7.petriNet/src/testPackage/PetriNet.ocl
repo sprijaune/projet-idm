@@ -3,12 +3,20 @@ import 'PetriNet.ecore'
 package petrinet
 
 context Place
-	inv NonNull_name('The \'name\' property of "' + self.toString() + '" is null') : name <> null
+inv NonNull_name('The \'name\' property of "' + self.toString() + '" is null') : name <> null
+
+context Place
+inv unique_name('The \'name\' property of "' + self.toString() + '" is not unique'):
+	Place.allInstances()->one(x: Place | x.name = self.name)
+	
+context Transition
+inv unique_name('The \'name\' property of "' + self.toString() + '" is not unique'):
+	Transition.allInstances()->one(x: Transition | x.name = self.name)
 	
 context Arc
-	inv correctArc : self.predecesseur.oclIsKindOf(Place) xor self.successeur.oclIsKindOf(Place)
+inv correctArc: self.predecesseur.oclIsKindOf(Place) xor self.successeur.oclIsKindOf(Place)
 	
 context ReadArc
-	inv placeToTrans : self.predecesseur.oclIsKindOf(Place) and self.successeur.oclIsKindOf(Transition)
+inv placeToTrans: self.predecesseur.oclIsKindOf(Place) and self.successeur.oclIsKindOf(Transition)
 
 endpackage
