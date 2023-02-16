@@ -1,0 +1,69 @@
+import 'SimplePDL.ecore'
+
+package simplepdl
+
+context Process
+inv warningSeverity: false
+inv withMessage('Explicit message in process ' + self.name + ' (withMessage)'): false
+inv errorSeverity: null
+
+context Process
+inv validName('Invalid name: ' + self.name):
+	self.name.matches('[A-Za-z_][A-Za-z0-9_]*')
+
+context ProcessElement
+def: process(): Process =
+	Process.allInstances()
+		->select(p | p.processElements->includes(self))
+		->asSequence()->first()
+
+context WorkSequence
+inv successorAndPredecessorInSameProcess('Activities not in the same process : '
+		+ self.predecessor.name + ' in ' + self.predecessor.process().name+ ' and '
+		+ self.successor.name + ' in ' + self.successor.process().name
+):
+	self.process() = self.successor.process()
+	and self.process() = self.predecessor.process()
+	
+context WorkSequence
+inv notReflexive('Sequences may not be reflexive: ' + self.predecessor.name + ' --' + self.linkType.toString() + '--> ' + self.successor.name):
+	self.predecessor <> self.successor
+	
+context WorkDefinition
+inv validName('Invalid name : ' + self.name):
+	self.name.matches('[A-Za-z_]\\w+')
+	
+context WorkDefinition
+inv uniqueName('The name property is not unique : ' + self.name):
+	self.Process.processElements
+		->select(e | e.oclIsKindOf(WorkDefinition))
+		->collect(e | e.oclAsType(WorkDefinition))
+		->forAll(w | self = w or self.name <> w.name)
+	
+context Ressource
+inv uniqueType('The name property is not unique : ' + self.type): 
+	self.Process.processElements
+		->select(e | e.oclIsKindOf(Ressource))
+		->collect(e | e.oclAsType(Ressource))
+		->forAll(w | self = w or self.type <> w.type)
+		
+context Ressource
+inv positiveQuantity('The quantity must be positive: ' + self.quantite.toString()):
+	self.quantite > 0
+		
+context UtilisationRessource
+inv validQuantity('Invalid quantity: ' + self.quantiteUtilisee.toString()):
+	self.quantiteUtilisee <= self.ressource.quantite
+	
+context UtilisationRessource
+inv positiveQuantity('The used quantity must be positive: ' + self.quantiteUtilisee.toString()):
+	self.quantiteUtilisee > 0
+	
+context UtilisationRessource
+inv uniqueResourceUtilisaiton('A WorkDefinition cannot use the same resource more than once : ' + self.workdefinition.name + ' --> ' + self.ressource.type): 
+	self.Process.processElements
+		->select(e | e.oclIsKindOf(UtilisationRessource))
+		->collect(e | e.oclAsType(UtilisationRessource))
+		->forAll(w | self = w or self.ressource <> w.ressource or self.workdefinition <> w.workdefinition)
+
+endpackage
